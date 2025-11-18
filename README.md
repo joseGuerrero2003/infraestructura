@@ -1,10 +1,10 @@
-# Infraestructura - Demo en GitHub Codespaces
+# Infraestructura de un ISP desplegado en entornos locales y pre-nube
 
 Este repositorio contiene una colección de configuraciones y scripts para servicios de infraestructura (DNS, DHCP, FreeRADIUS, monitoreo) originalmente preparados para un laboratorio con Vagrant y máquinas virtuales. Debido a limitaciones de recursos en máquinas locales, se adaptó la demostración para ejecutarse en GitHub Codespaces usando contenedores Docker y servicios simulados. El objetivo es poder presentar y validar la funcionalidad de los servicios de forma rápida, segura y reproducible en una sesión de clase.
 
 ------
 
-**Resumen ejecutivo (qué hice y por qué)**
+**Resumen ejecutivo**
 
 - Inicialmente el laboratorio se diseñó usando `Vagrant` y múltiples VMs (ver `Vagrantfile` y `configs/`). Esto es ideal para entornos de red real pero exige mucha memoria/CPU.
 - Para poder demostrar en entornos con recursos limitados (como el escenario de clase), migré la demo a `Codespaces` con un `devcontainer` que contiene Docker. Los servicios principales (DNS, DHCP, RADIUS) se simulan con un servicio ligero en Python que además exporta métricas Prometheus.
