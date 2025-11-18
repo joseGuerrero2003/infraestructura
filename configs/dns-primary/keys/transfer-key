@@ -1,0 +1,4 @@
+key "transfer-key" {
+    algorithm hmac-sha256;
+    secret "2uoGBHR+QQ7NA78/UI+FqK0iI7h02g426GMP1uJZuDQKkw==";
+};

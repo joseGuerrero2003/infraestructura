@@ -1,0 +1,32 @@
+$TTL 86400
+@       IN  SOA     ns1.myempresa.test. admin.myempresa.test. (
+                2025020101  ; Serial
+                3600        ; Refresh
+                1800        ; Retry
+                604800      ; Expire
+                86400 )     ; Minimum
+
+; -----------------------
+; Servidores DNS
+; -----------------------
+        IN  NS      ns1.myempresa.test.
+        IN  NS      ns2.myempresa.test.
+
+; -----------------------
+; Registros A (IPv4)
+; -----------------------
+ns1     IN  A       192.168.50.2
+ns2     IN  A       192.168.50.3
+
+; Ejemplos de hosts
+www     IN  A       192.168.50.10
+mail    IN  A       192.168.50.20
+
+; -----------------------
+; Registros AAAA (IPv6)
+; -----------------------
+ns1     IN  AAAA    fd00:cafe:beef::2
+ns2     IN  AAAA    fd00:cafe:beef::3
+
+www     IN  AAAA    fd00:cafe:beef::10
+mail    IN  AAAA    fd00:cafe:beef::20

@@ -1,0 +1,5 @@
+---
+controller:
+  hostname: controller
+compute_nodes:
+  - compute1

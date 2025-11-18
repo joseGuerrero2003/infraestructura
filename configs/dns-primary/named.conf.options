@@ -1,0 +1,51 @@
+options {
+    directory "/var/cache/bind";
+
+    // ===============================
+    // Habilitar IPv4 e IPv6
+    // ===============================
+    listen-on { any; };
+    listen-on-v6 { any; };
+
+    // ===============================
+    // Permitir consultas desde:
+    // - Tu red interna
+    // - Host-only de Vagrant
+    // - localhost
+    // ===============================
+    allow-query {
+        localhost;
+        127.0.0.0/8;
+        192.168.50.0/24;
+        fd00:cafe:beef::/64;
+    };
+
+    // ===============================
+    // Transferencias seguras solo con TSIG
+    // (El control real lo haces en named.conf.local)
+    // ===============================
+    allow-transfer { none; };
+
+    // ===============================
+    // Reenviadores DNS (opcional)
+    // Google DNS + Cloudflare
+    // ===============================
+    forwarders {
+        8.8.8.8;
+        8.8.4.4;
+        1.1.1.1;
+    };
+    forward only;
+
+    // ===============================
+    // DNSSEC
+    // ===============================
+    dnssec-enable yes;
+    dnssec-validation auto;
+
+    // ===============================
+    // Logging básico para debugging
+    // ===============================
+    auth-nxdomain no;    // Recomendado por RFC
+    minimal-responses yes;
+};

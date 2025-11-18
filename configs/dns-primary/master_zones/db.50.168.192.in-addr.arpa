@@ -1,0 +1,19 @@
+$TTL 86400
+@       IN  SOA     ns1.myempresa.test. admin.myempresa.test. (
+                2025020101 ; Serial
+                3600       ; Refresh
+                1800       ; Retry
+                604800     ; Expire
+                86400 )    ; Minimum
+
+        IN  NS      ns1.myempresa.test.
+        IN  NS      ns2.myempresa.test.
+
+; -----------------------
+; PTR – DNS IPv4
+; -----------------------
+2       IN  PTR     ns1.myempresa.test.
+3       IN  PTR     ns2.myempresa.test.
+
+10      IN  PTR     www.myempresa.test.
+20      IN  PTR     mail.myempresa.test.

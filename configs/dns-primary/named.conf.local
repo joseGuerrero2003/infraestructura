@@ -1,0 +1,72 @@
+// ================================
+// TSIG Key for secure zone transfers
+// ================================
+key "transfer-key" {
+    algorithm hmac-sha256;
+    secret "2uoGBHR+QQ7NA78/UI+FqK0iI7h02g426GMP1uJZuDQKkw==";
+};
+
+// ================================
+// ACL de servidores que pueden recibir NOTIFY y TRANSFER
+// ================================
+acl "trusted-slaves" {
+    192.168.50.3;            // DNS secundario IPv4
+    fd00:cafe:beef::3;       // DNS secundario IPv6
+    localhost;
+};
+
+// ================================
+// Zona Directa principal (tu dominio)
+// ================================
+zone "myempresa.test" {
+    type master;
+    file "master_zones/db.myempresa.test";
+
+    allow-query { any; };
+    allow-transfer { key "transfer-key"; };
+    also-notify { 192.168.50.3; fd00:cafe:beef::3; };
+
+    // DNSSEC
+    key-directory "keys/myempresa.test";
+    auto-dnssec maintain;
+    inline-signing yes;
+    serial-update-method unixtime;
+    journal "journals/db.myempresa.test.jnl";
+};
+
+// ================================
+// Zona Reversa IPv4 (192.168.50.x)
+// ================================
+zone "50.168.192.in-addr.arpa" {
+    type master;
+    file "master_zones/db.50.168.192.in-addr.arpa";
+
+    allow-transfer { key "transfer-key"; };
+    also-notify { 192.168.50.3; fd00:cafe:beef::3; };
+
+    // DNSSEC
+    key-directory "keys/50.168.192.in-addr.arpa";
+    auto-dnssec maintain;
+    inline-signing yes;
+    serial-update-method unixtime;
+    journal "journals/db.50.168.192.in-addr.arpa.jnl";
+};
+
+// ================================
+// Zona Reversa IPv6
+// fd00:cafe:beef::/64 → zona: f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa.
+// ================================
+zone "f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa." {
+    type master;
+    file "master_zones/db.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa";
+
+    allow-transfer { key "transfer-key"; };
+    also-notify { 192.168.50.3; fd00:cafe:beef::3; };
+
+    // DNSSEC
+    key-directory "keys/f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa";
+    auto-dnssec maintain;
+    inline-signing yes;
+    serial-update-method unixtime;
+    journal "journals/db.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa.jnl";
+};

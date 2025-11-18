@@ -1,0 +1,37 @@
+# Archivos específicos de Vagrant
+.vagrant/
+*.box
+*.log
+
+# Archivos específicos de VirtualBox
+*.vbox
+*.vbox-prev
+*.vmdk
+*.vdi
+*.hdd
+*.ova
+*.ovf
+logs/
+nvram/
+
+# Archivos del Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# Archivos específicos del IDE / Editor
+.idea/
+.vscode/
+*.swp
+*~
+
+# Archivos generados por obra de OpenDKIM (importante! las claves deben gestionarse de forma segura, no subirlas al repositorio)
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log

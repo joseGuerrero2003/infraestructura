@@ -1,0 +1,40 @@
+key "transfer-key" {
+    algorithm hmac-sha256;
+    secret "2uoGBHR+QQ7NA78/UI+FqK0iI7h02g426GMP1uJZuDQKkw==";   // misma clave del primario
+};
+
+// ======================================
+// Zona directa (myempresa.test)
+// ======================================
+zone "myempresa.test" {
+    type slave;
+    masters {
+        192.168.50.2 key "transfer-key";
+        fd00:cafe:beef::2 key "transfer-key";
+    };
+    file "slave_zones/db.myempresa.test";
+};
+
+// ======================================
+// Zona reversa IPv4
+// ======================================
+zone "50.168.192.in-addr.arpa" {
+    type slave;
+    masters {
+        192.168.50.2 key "transfer-key";
+        fd00:cafe:beef::2 key "transfer-key";
+    };
+    file "slave_zones/db.50.168.192.in-addr.arpa";
+};
+
+// ======================================
+// Zona reversa IPv6
+// ======================================
+zone "f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa." {
+    type slave;
+    masters {
+        192.168.50.2 key "transfer-key";
+        fd00:cafe:beef::2 key "transfer-key";
+    };
+    file "slave_zones/db.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa";
+};

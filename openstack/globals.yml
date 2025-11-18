@@ -1,0 +1,4 @@
+---
+network:
+  external_interface: eth1
+  internal_interface: eth2

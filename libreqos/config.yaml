@@ -1,0 +1,18 @@
+global:
+  log_level: INFO
+  database: sqlite:///libreqos.db
+
+profiles:
+  default:
+    bandwidth: 100Mbps
+    priority: normal
+
+vlans:
+  vlan10:
+    subnet: 192.168.10.0/24
+    gateway: 192.168.10.1
+    qos_profile: default
+  vlan20:
+    subnet: fd00:cafe:beef::/64
+    gateway: fd00:cafe:beef::1
+    qos_profile: default

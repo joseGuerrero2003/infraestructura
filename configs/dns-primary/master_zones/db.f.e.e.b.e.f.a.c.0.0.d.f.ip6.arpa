@@ -1,0 +1,25 @@
+$TTL 86400
+@       IN  SOA     ns1.myempresa.test. admin.myempresa.test. (
+                2025020101
+                3600
+                1800
+                604800
+                86400 )
+
+        IN  NS      ns1.myempresa.test.
+        IN  NS      ns2.myempresa.test.
+
+; -----------------------
+; PTR – DNS IPv6
+; -----------------------
+; ns1 : fd00:cafe:beef::2
+2.0.0.0.0.0.0.0.0.0.0.0.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa. IN PTR ns1.myempresa.test.
+
+; ns2 : fd00:cafe:beef::3
+3.0.0.0.0.0.0.0.0.0.0.0.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa. IN PTR ns2.myempresa.test.
+
+; www : fd00:cafe:beef::10
+0.1.0.0.0.0.0.0.0.0.0.0.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa. IN PTR www.myempresa.test.
+
+; mail : fd00:cafe:beef::20
+0.2.0.0.0.0.0.0.0.0.0.0.f.e.e.b.e.f.a.c.0.0.d.f.ip6.arpa. IN PTR mail.myempresa.test.
