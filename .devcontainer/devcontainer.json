@@ -1,0 +1,14 @@
+{
+  "name": "Infraestructura - Codespace",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/workspaces/infraestructura",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "forwardPorts": [9090,8001,8002,8003,1053],
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y docker.io docker-compose-plugin iputils-ping dnsutils curl && sudo usermod -aG docker $USER || true",
+  "extensions": [],
+  "remoteUser": "vscode"
+}

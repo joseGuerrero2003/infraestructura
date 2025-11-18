@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'simulated-services'
+    static_configs:
+      - targets: ['metrics_sim:8000', 'dhcp_sim:8000', 'radius_sim:8000']

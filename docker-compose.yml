@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  dns_sim:
+    build:
+      context: ./docker/sim
+      dockerfile: Dockerfile
+    container_name: infra_dns_sim
+    environment:
+      - SERVICE_TYPE=dns
+    volumes:
+      - ./configs/dns-primary:/configs-dns:ro
+    ports:
+      - "1053:8000/tcp"
+    restart: unless-stopped
+
+  dhcp_sim:
+    build:
+      context: ./docker/sim
+      dockerfile: Dockerfile
+    container_name: infra_dhcp_sim
+    environment:
+      - SERVICE_TYPE=dhcp
+    volumes:
+      - ./configs/dhcp:/configs:ro
+    ports:
+      - "8001:8000/tcp"
+    restart: unless-stopped
+
+  radius_sim:
+    build:
+      context: ./docker/sim
+      dockerfile: Dockerfile
+    container_name: infra_radius_sim
+    environment:
+      - SERVICE_TYPE=radius
+    volumes:
+      - ./freeradius:/freeradius:ro
+    ports:
+      - "8002:8000/tcp"
+    restart: unless-stopped
+
+  metrics_sim:
+    build:
+      context: ./docker/sim
+      dockerfile: Dockerfile
+    container_name: infra_metrics
+    environment:
+      - SERVICE_TYPE=metrics
+    ports:
+      - "8003:8000/tcp"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: infra_prometheus
+    volumes:
+      - ./monitoring/prometheus_codespaces.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - metrics_sim
+    restart: unless-stopped
