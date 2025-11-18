@@ -98,15 +98,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define "client1" do |client|
     client.vm.box = UBUNTU_BOX
     client.vm.hostname = "client1.#{PRIMARY_DOMAIN}"
-    client.vm.network "private_network", type: "dhcp"
+    client.vm.network "private_network", ip: "192.168.60.10"
     client.vm.provision "shell", path: "scripts/client-setup.sh"
   end
+
 
   # Cliente 2
   config.vm.define "client2" do |client|
     client.vm.box = UBUNTU_BOX
     client.vm.hostname = "client2.#{PRIMARY_DOMAIN}"
-    client.vm.network "private_network", type: "dhcp"
+    client.vm.network "private_network", type: "192.168.60.11"
     client.vm.provision "shell", path: "scripts/client-setup.sh"
   end
 
