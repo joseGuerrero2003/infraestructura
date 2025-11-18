@@ -1,86 +1,179 @@
 # Infraestructura - Demo en GitHub Codespaces
 
-Objetivo: desplegar rápidamente una demo funcional dentro de GitHub Codespaces que permita demostrar DNS, DHCP, FreeRADIUS y Prometheus/monitoring de forma simulada y segura.
+Este repositorio contiene una colección de configuraciones y scripts para servicios de infraestructura (DNS, DHCP, FreeRADIUS, monitoreo) originalmente preparados para un laboratorio con Vagrant y máquinas virtuales. Debido a limitaciones de recursos en máquinas locales, se adaptó la demostración para ejecutarse en GitHub Codespaces usando contenedores Docker y servicios simulados. El objetivo es poder presentar y validar la funcionalidad de los servicios de forma rápida, segura y reproducible en una sesión de clase.
 
-Resumen rápido:
-- Abrir este repositorio en Codespaces.
-- Esperar a que el `devcontainer` se construya (instala Docker y herramientas básicas).
-- Ejecutar `docker compose up --build -d` para levantar los servicios simulados.
+------
 
-Contenido creado/añadido:
-- `.devcontainer/` : configuración para Codespaces con Docker instalado.
-- `docker-compose.yml` : orquesta los servicios de demo.
-- `docker/sim/` : imagen ligera (Flask) que simula DHCP, FreeRADIUS y exporta métricas Prometheus.
-- `monitoring/prometheus_codespaces.yml` : configuración de Prometheus para la demo.
+**Resumen ejecutivo (qué hice y por qué)**
 
-Servicios que levanta la demo:
-- DNS (Bind9) - mapeado al puerto `1053` en el Codespace (uso `dig` con puerto 1053 para probar).
-- DHCP (simulado) - HTTP en `8001` (endpoint `/leases` y métricas `/metrics`).
-- FreeRADIUS (simulado) - HTTP en `8002` (endpoint `/auth` y métricas `/metrics`).
-- Metrics simulator - HTTP en `8003` (endpoint `/metrics`).
-- Prometheus - Web UI en `9090`.
+- Inicialmente el laboratorio se diseñó usando `Vagrant` y múltiples VMs (ver `Vagrantfile` y `configs/`). Esto es ideal para entornos de red real pero exige mucha memoria/CPU.
+- Para poder demostrar en entornos con recursos limitados (como el escenario de clase), migré la demo a `Codespaces` con un `devcontainer` que contiene Docker. Los servicios principales (DNS, DHCP, RADIUS) se simulan con un servicio ligero en Python que además exporta métricas Prometheus.
+- Esta migración permite: reproducibilidad, menor consumo de recursos, menor riesgo de alterar redes locales y obtener métricas observables con Prometheus.
 
-Pasos detallados para la demostración en clase
+------
+
+**Qué hay en este repositorio (navegación rápida)**
+
+- `Vagrantfile` + `configs/` : configuración original para despliegue con Vagrant/VirtualBox (múltiples VMs para DNS primario/secundario, DHCP, FreeRADIUS, clientes, etc.).
+- `.devcontainer/` : configuración para GitHub Codespaces (instala docker, herramientas y monta `docker.sock`).
+- `docker-compose.yml` : orquesta los servicios de demo para Codespaces (simuladores y Prometheus).
+- `docker/sim/` : imagen ligera con `sim_service.py` (Flask) que simula endpoints y exporta métricas Prometheus.
+- `monitoring/prometheus_codespaces.yml` : configuración de Prometheus usada en la demo.
+- `freeradius/`, `configs/dhcp`, `configs/dns-primary/` : archivos de configuración reales que pueden usarse para desplegar servicios verdaderos en entornos con permisos de red.
+
+------
+
+Arquitectura de la demo (simplificada)
+
+- `infra_dns_sim` (simulador TCP): responde a consultas simples y expone métricas.
+- `infra_dhcp_sim` (simulador): expone la configuración de DHCP y métricas de leases.
+- `infra_radius_sim` (simulador): expone endpoint de autenticación `/auth` y métricas de autenticaciones.
+- `infra_metrics` (agregador simulado): servicio que mantiene métricas combinadas para la demo.
+- `infra_prometheus` (Prometheus): scrapea las métricas expuestas por los simuladores y permite visualización.
+
+Los servicios están definidos en `docker-compose.yml` para ejecutar todo dentro del Codespace con puertos mapeados hacia localhost.
+
+------
+
+Guía de uso — pasos para la demostración en clase
+
 1) Abrir el repositorio en GitHub Codespaces
-   - Usa el botón "Code -> Open with Codespaces" en GitHub.
-   - Codespaces abrirá y construirá el devcontainer usando `.devcontainer/Dockerfile` y `devcontainer.json`.
+   - En GitHub, usar "Code -> Open with Codespaces".
+   - Esperar a que el devcontainer se construya. El `postCreateCommand` instala `docker` y utilidades.
 
-2) Construir y arrancar la demo
-   - Abrir un terminal integrado en Codespaces y ejecutar:
+2) Levantar la demo
+   - En el terminal integrado del Codespace (raíz del repo):
 
 ```bash
 docker compose up --build -d
 ```
 
-3) Verificar servicios
-- DNS (Bind):
-  - Probar con dig desde el Codespace (usa TCP/puerto 1053):
+3) Verificar que los contenedores estén corriendo
 
 ```bash
-dig @127.0.0.1 -p 1053 example.com +noall +answer
+docker ps
 ```
+
+4) Probar los servicios (comandos rápidos)
+
+- DNS (simulado, HTTP/TCP):
+  ```bash
+  curl http://127.0.0.1:1053/
+  # (si instalas dnsutils en el devcontainer, puedes usar dig con TCP)
+  dig +tcp @127.0.0.1 -p 1053 example.com
+  ```
 
 - DHCP (simulado):
-  - Ver leases (simulado):
-
-```bash
-curl http://127.0.0.1:8001/leases
-```
-
-  - Ver logs para observar eventos simulados:
-
-```bash
-docker logs -f infra_dhcp_sim
-```
+  ```bash
+  curl http://127.0.0.1:8001/leases
+  docker logs -f infra_dhcp_sim
+  ```
 
 - FreeRADIUS (simulado):
+  ```bash
+  curl "http://127.0.0.1:8002/auth?user=alumno"
+  ```
 
-```bash
-curl "http://127.0.0.1:8002/auth?user=alumno"
-```
+- Métricas y Prometheus:
+  - Abrir `http://127.0.0.1:9090` (Ports view si necesitas publicar puerto desde Codespaces).
+  - En Prometheus → Status → Targets verás `metrics_sim`, `dhcp_sim` y `radius_sim` como UP.
+  - Consultas de ejemplo: `dns_queries_total`, `dhcp_leases_active`, `radius_auth_success_total`.
 
-- Prometheus:
-  - Abrir el puerto `9090` desde Codespaces (Ports view) o usar el navegador integrado: `http://127.0.0.1:9090`.
-  - En Prometheus -> Status -> Targets debe aparecer `metrics_sim:8000`, `dhcp_sim:8000`, `radius_sim:8000` como UP.
-
-Limitaciones y notas importantes
-- UDP: GitHub Codespaces no expone puertos UDP públicamente; por eso Bind está mapeado a `1053` y recomendamos usar `dig` con la opción `+tcp` o especificando el puerto. Para demostraciones reales (respuestas sobre UDP/DHCP en red física) necesitarás desplegar en un host con acceso a la red (VM o servidor con capacidad CAP_NET_ADMIN).
-- DHCP real: en este demo DHCP está simulado (no asigna IPs en la red del Codespace). Para operar DHCP real necesitas privilegios de red/host y típicamente ejecutar Kea o isc-dhcp con capacidades de red en una máquina dedicada/VM.
-- FreeRADIUS real: aquí está simulado; una demo real requeriría ejecutar `freeradius` y usar clientes RADIUS para autenticar.
-
-Siguientes pasos recomendados (documentados en el README para continuar después de la demo):
-- Desplegar Kea DHCP real en una VM o en una máquina con Docker y CAP_NET_ADMIN.
-- Desplegar FreeRADIUS real usando la imagen oficial o instalando desde paquetes y mapear `clients.conf` y `users`.
-- Crear manifiestos `k8s/` para migrar los servicios a Kubernetes y preparar `LibreNMS` (documentado en esta rama más adelante).
-
-Comandos rápidos de limpieza
+5) Parar y limpiar:
 
 ```bash
 docker compose down
 ```
 
-Ayuda y diagnóstico
-- Si `docker compose up` falla en Codespaces: abrir el panel "Terminal" y revisar la salida del `postCreateCommand` en la vista de "Dev Containers". Asegurar que el socket de Docker está accesible (`/var/run/docker.sock`).
-- Si Prometheus no encuentra targets, revisar `docker logs infra_prometheus` y los logs de `infra_metrics`.
+------
 
-Si quieres, procedo ahora a levantar la demo en este Codespace (construir y ejecutar). ¿Lo hago ahora? (Puedo ejecutar `docker compose up --build -d` y luego mostrar cómo probar cada servicio.)
+Explicación técnica y pedagógica (qué estamos demostrando)
+
+- DNS: el servicio DNS traduce nombres a direcciones. En el laboratorio original se usan zonas maestras y DNSSEC; en la demo de Codespaces usamos un simulador que ilustra respuestas y exporta métricas.
+- DHCP: protocolo para asignación dinámica de direcciones IP. En el entorno real, Kea o isc-dhcp atienden sobre UDP/67-68 — sin embargo Codespaces impide manipular la red host, por lo que usamos una simulación que muestra la configuración de subredes y leases.
+- FreeRADIUS: servidor de autenticación para redes (802.1X, etc.). La demo simula peticiones de autentificación (`Access-Accept` / `Access-Reject`) y contabiliza éxitos para Prometheus.
+- Observabilidad (Prometheus): recopilamos métricas de los servicios simulados para mostrar cómo monitorizar disponibilidad, tráfico y éxito/fracaso de operaciones.
+
+Esta aproximación (simuladores + Prometheus) facilita explicar los conceptos sin depender de privilegios o topologías de red complejas.
+
+------
+
+Limitaciones y cómo realizar una demo 'real' completa
+
+- UDP y privilegios de red: para que DHCP y DNS funcionen de forma nativa en la red (clientes obteniendo IPs, DNS sobre UDP), necesitas un host/VM con capacidad de manipular interfaces de red (CAP_NET_ADMIN) o desplegar en hardware/VM en la nube.
+- Recomendación para demo real:
+  1. Reservar una VM (cloud provider o máquina local) con permisos para ejecutar contenedores con capacidades de red.
+  2. Desplegar Kea DHCP y Bind9/FreeRADIUS reales usando las configuraciones en `configs/` y `freeradius/`.
+  3. Probar con clientes reales en la misma red o mediante VLANs/segmentación.
+
+------
+
+Control de versiones y cómo subir estos cambios al repositorio remoto
+
+Antes de empujar (push) hay dos opciones:
+
+1) Mantener el historial y fusionar (merge) los cambios remotos con los locales.
+   - Útil si quieres preservar ambos historiales y resolver conflictos si aparecen.
+   - Comandos sugeridos:
+
+```bash
+# Descarga cambios remotos
+git fetch origin
+# Revisar diferencias
+git log --oneline --graph --decorate --all
+# Configurar estrategia de pull (opcional)
+git config pull.rebase false
+# Hacer pull (merge):
+git pull origin master
+# Resolver conflictos si aparecen, luego:
+git add .
+git commit -m "Merge remote master into local master"
+git push origin master
+```
+
+2) Reemplazar (forzar) el `master` remoto con tu estado local (WARNING: sobrescribe el remoto)
+   - Útil si confirmas que tu estado local es el que debe quedar y quieres evitar merges.
+   - Recomendado: crear una rama remota de respaldo antes de forzar.
+
+Comandos para respaldo + forzar push (seguros y explícitos):
+
+```bash
+# 1) Asegúrate de que tienes todos los cambios locales committeados
+git status
+git add .
+git commit -m "Demo: configurar Codespaces y simuladores + README completo"
+
+# 2) Traer referencias remotas (no mezclar todavía)
+git fetch origin
+
+# 3) Crear una rama de respaldo en remoto con el estado actual de origin/master
+git branch backup-remote-master origin/master
+git push origin backup-remote-master:backup-remote-master
+
+# 4) FORZAR el push de tu master local a origin/master (sobrescribe el remoto)
+git push --force origin master
+```
+
+Importante: el paso 3 crea `backup-remote-master` en el remoto con el contenido previo, por si necesitas restaurarlo.
+
+Si prefieres que yo ejecute estos pasos desde aquí (crear backup remoto y forzar push), confirma explícitamente que deseas sobrescribir `origin/master` y lo haré.
+
+------
+
+Preguntas abiertas (necesarias para completar la documentación final)
+
+- ¿Deseas que haga el `git push --force` ahora para reemplazar el remoto con tu estado local? (Si respondes que sí, lo haré y dejaré un mensaje en el repo indicando que la rama remota previa fue respaldada en `backup-remote-master`).
+- ¿Quieres que añada un script `scripts/demo.sh` que ejecute los comandos de verificación (curl/dig) y muestre un resumen listo para presentar en clase?
+
+------
+
+Próximos pasos recomendados si quieres ampliar el proyecto
+
+- Preparar manifiestos de Kubernetes en `k8s/` para migrar la demo a un cluster (simuladores primero, luego componentes reales).
+- Añadir dashboards de Grafana que consuman Prometheus y muestren métricas clave para la demo (puede añadirse al `docker-compose`).
+- Automatizar la creación de un Codespace con plantilla y acciones de GitHub para ejecutar la demo automáticamente al crear un Codespace.
+
+------
+
+Si confirmas, procedo con el `git push` (o lo dejo para que lo ejecutes localmente). Si prefieres, puedo crear también `scripts/demo.sh` antes de hacer push.
+
